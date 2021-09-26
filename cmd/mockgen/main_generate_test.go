@@ -2,6 +2,9 @@ package main
 
 import (
 	"go/format"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	gen "github.com/MyNihongo/codegen"
@@ -13,6 +16,13 @@ const pkgName = `example`
 func formatFile(file *gen.File) string {
 	res, _ := format.Source([]byte(file.GoString()))
 	return string(res)
+}
+
+func getWd() string {
+	wd, _ := os.Getwd()
+	index := strings.LastIndex(wd, "cmd")
+
+	return filepath.Join(wd[:index], "examples")
 }
 
 func TestGenerateOneService(t *testing.T) {
@@ -35,7 +45,8 @@ func TestGenerateOneService(t *testing.T) {
 		},
 	}
 
-	file, err := generateMocks(pkgName, fixture)
+	wd := getWd()
+	file, err := generateMocks(wd, pkgName, fixture)
 	got := formatFile(file)
 
 	assert.NotNil(t, err)

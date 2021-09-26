@@ -70,7 +70,7 @@ func execute(wd string, mocks []string, offset int) error {
 			}
 		}
 
-		if file, err := generateMocks(pkg.Name, mockDecls); err != nil {
+		if file, err := generateMocks(wd, pkg.Name, mockDecls); err != nil {
 			return err
 		} else {
 			path := filepath.Join(wd, "mock_gen.go")

@@ -14,9 +14,12 @@ const (
 	assertExpectationsName = "AssertExpectations"
 )
 
-func generateMocks(pkgName string, mocks []*mockDecl) (*gen.File, error) {
+func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 	file := gen.NewFile(pkgName, "my-nihongo-mockgen")
-	file.AddImport("github.com/stretchr/testify/mock")
+	file.Imports(
+		gen.Import("testing"),
+		gen.Import("github.com/stretchr/testify/mock"),
+	)
 
 	mockContainer := file.Struct(mockContainerName)
 
