@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 
 	gen "github.com/MyNihongo/codegen"
 )
@@ -20,6 +18,8 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 		gen.Import("testing"),
 		gen.Import("github.com/stretchr/testify/mock"),
 	)
+
+	declProvider := &declProvider{}
 
 	for _, mock := range mocks {
 		fixtureName := createFixtureTypeName(mock.mockNameDecl)
@@ -43,9 +43,15 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 			createFixtureReturnType(mock.mockNameDecl),
 			gen.ReturnType(fixtureName).Pointer(),
 		)
+		/*initFixtureStmt :=*/ gen.InitStruct(mock.typeName).Address()
 
 		for _, field := range mock.fields {
+			if _, ok := declProvider.TryGetMock(wd, field.typeDecl); !ok {
+				continue
+			}
+
 			fieldName, mockName := field.name, fmt.Sprintf("Mock%s", field.typeName)
+			generateMock(file, field, mockName)
 
 			fixtureStruct.AddProp(
 				gen.Property(fieldName, mockName).Pointer(),
@@ -61,12 +67,21 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 			)
 		}
 
-		// file.Struct(mockTypeName).Props(
-		// 	gen.QualEmbeddedProperty("mock", "Mock"),
-		// )
+		// TODO:
+		// createFixtureFunc.AddStatement(initFixtureStmt)
 	}
 
 	return file, nil
+}
+
+func generateMock(file *gen.File, field *fieldDecl, mockName string) {
+	file.Struct(mockName).Props(
+		gen.QualEmbeddedProperty("mock", "Mock"),
+	)
+
+	// for _, v := range v {
+
+	// }
 }
 
 func createFixtureTypeName(mockName *mockNameDecl) string {
@@ -86,12 +101,4 @@ func createFixtureReturnType(mockName *mockNameDecl) *gen.ReturnTypeDecl {
 	} else {
 		return gen.ReturnType(mockName.typeName).Pointer()
 	}
-}
-
-func LowerFirst(s string) string {
-	if s == "" {
-		return ""
-	}
-	r, n := utf8.DecodeRuneInString(s)
-	return string(unicode.ToLower(r)) + s[n:]
 }

@@ -79,13 +79,13 @@ func execute(wd string, mocks []string, offset int) error {
 	}
 }
 
-func loadPackage(wd string) (*packages.Package, error) {
+func loadPackage(wd string, patterns ...string) (*packages.Package, error) {
 	cfg := &packages.Config{
 		Dir:  wd,
 		Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedDeps,
 	}
 
-	if packages, err := packages.Load(cfg); err != nil {
+	if packages, err := packages.Load(cfg, patterns...); err != nil {
 		return nil, err
 	} else if len(packages) != 1 {
 		return nil, fmt.Errorf("cannot identify a unique package in %s", wd)
@@ -94,8 +94,8 @@ func loadPackage(wd string) (*packages.Package, error) {
 	}
 }
 
-func loadPackageScope(wd string) (*types.Scope, error) {
-	if pkg, err := loadPackage(wd); err != nil {
+func loadPackageScope(wd string, patterns ...string) (*types.Scope, error) {
+	if pkg, err := loadPackage(wd, patterns...); err != nil {
 		return nil, err
 	} else {
 		return pkg.Types.Scope(), nil
