@@ -39,7 +39,7 @@ type typeDecl struct {
 }
 
 func execute(wd string, mocks []string, offset int) error {
-	if scope, err := loadPackageScope(wd); err != nil {
+	if pkg, err := loadPackage(wd); err != nil {
 		return err
 	} else {
 		mockDecls := make([]*mockDecl, len(mocks)-offset)
@@ -47,7 +47,7 @@ func execute(wd string, mocks []string, offset int) error {
 		for i := offset; i < len(mocks); i++ {
 			mockName := getMockName(mocks[i])
 
-			if typeObj := scope.Lookup(mockName.typeName); typeObj == nil {
+			if typeObj := pkg.Types.Scope().Lookup(mockName.typeName); typeObj == nil {
 				return fmt.Errorf("type %s is not found in %s", mockName.typeName, wd)
 			} else if structType, ok := typeObj.Type().Underlying().(*types.Struct); !ok {
 				return fmt.Errorf("type %s is not a struct", mockName.typeName)
@@ -70,7 +70,7 @@ func execute(wd string, mocks []string, offset int) error {
 			}
 		}
 
-		if file, err := generateMocks(mockDecls); err != nil {
+		if file, err := generateMocks(pkg.Name, mockDecls); err != nil {
 			return err
 		} else {
 			path := filepath.Join(wd, "mock_gen.go")
@@ -79,7 +79,7 @@ func execute(wd string, mocks []string, offset int) error {
 	}
 }
 
-func loadPackageScope(wd string) (*types.Scope, error) {
+func loadPackage(wd string) (*packages.Package, error) {
 	cfg := &packages.Config{
 		Dir:  wd,
 		Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedDeps,
@@ -90,7 +90,15 @@ func loadPackageScope(wd string) (*types.Scope, error) {
 	} else if len(packages) != 1 {
 		return nil, fmt.Errorf("cannot identify a unique package in %s", wd)
 	} else {
-		return packages[0].Types.Scope(), nil
+		return packages[0], nil
+	}
+}
+
+func loadPackageScope(wd string) (*types.Scope, error) {
+	if pkg, err := loadPackage(wd); err != nil {
+		return nil, err
+	} else {
+		return pkg.Types.Scope(), nil
 	}
 }
 
