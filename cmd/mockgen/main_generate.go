@@ -19,7 +19,7 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 		gen.Import("github.com/stretchr/testify/mock"),
 	)
 
-	declProvider := &declProvider{}
+	declProvider := NewDeclProvider()
 
 	for _, mock := range mocks {
 		fixtureName := createFixtureTypeName(mock.mockNameDecl)
