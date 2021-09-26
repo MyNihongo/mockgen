@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	mockContainerName      = "mockContainer"
 	assertExpectationsName = "AssertExpectations"
 )
 
+// generateMocks generates the complete code for all mocks
 func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 	file := gen.NewFile(pkgName, "my-nihongo-mockgen")
 	file.Imports(
@@ -21,32 +21,55 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 		gen.Import("github.com/stretchr/testify/mock"),
 	)
 
-	mockContainer := file.Struct(mockContainerName)
-
-	file.CommentF("%s asserts that everything specified with On and Return was in fact called as expected. Calls may have occurred in any order.", assertExpectationsName)
-	assertExpectationsFunc := file.Method(
-		gen.This(mockContainerName).Pointer(),
-		assertExpectationsName,
-	).Params(
-		gen.QualParam("t", "testing", "T"),
-	)
-
 	for _, mock := range mocks {
-		mockTypeName := createMockTypeName(mock.mockNameDecl)
-		fieldName := LowerFirst(mockTypeName)
+		fixtureName := createFixtureTypeName(mock.mockNameDecl)
+		createFixtureName := fmt.Sprintf("create%s", strings.Title(fixtureName))
 
-		mockContainer.AddProp(gen.Property(fieldName, mockTypeName).Pointer())
-		assertExpectationsFunc.AddStatement(gen.Identifier("m").Field(fieldName).Call(assertExpectationsName).Args(gen.Identifier("t")))
+		// fixture
+		fixtureStruct := file.Struct(fixtureName)
 
-		file.Struct(mockTypeName).Props(
-			gen.QualEmbeddedProperty("mock", "Mock"),
+		// AssertExpectations
+		file.CommentF("%s asserts that everything specified with On and Return was in fact called as expected. Calls may have occurred in any order.", assertExpectationsName)
+		assertExpectationsFunc := file.Method(
+			gen.This(fixtureName).Pointer(),
+			assertExpectationsName,
+		).Params(
+			gen.QualParam("t", "testing", "T"),
 		)
+
+		// createFixture
+		file.CommentF("%s creates a new fixture will all mocks", createFixtureName)
+		createFixtureFunc := file.Func(createFixtureName).ReturnTypes(
+			createFixtureReturnType(mock.mockNameDecl),
+			gen.ReturnType(fixtureName).Pointer(),
+		)
+
+		for _, field := range mock.fields {
+			fieldName, mockName := field.name, fmt.Sprintf("Mock%s", field.typeName)
+
+			fixtureStruct.AddProp(
+				gen.Property(fieldName, mockName).Pointer(),
+			)
+
+			assertExpectationsFunc.AddStatement(
+				gen.Identifier("f").Field(fieldName).Call(assertExpectationsName).Args(gen.Identifier("t")),
+			)
+
+			createFixtureFunc.AddStatement(
+				// TODO: use the syntax
+				gen.Declare(fieldName).Values(gen.Identifier(fmt.Sprintf("new(%s)", mockName))),
+			)
+		}
+
+		// file.Struct(mockTypeName).Props(
+		// 	gen.QualEmbeddedProperty("mock", "Mock"),
+		// )
 	}
 
 	return file, nil
 }
 
-func createMockTypeName(mockName *mockNameDecl) string {
+func createFixtureTypeName(mockName *mockNameDecl) string {
 	var name string
 	if len(mockName.interfaceName) != 0 {
 		name = mockName.interfaceName
@@ -54,7 +77,15 @@ func createMockTypeName(mockName *mockNameDecl) string {
 		name = mockName.typeName
 	}
 
-	return fmt.Sprintf("Mock%s", strings.Title(name))
+	return fmt.Sprintf("fixture%s", strings.Title(name))
+}
+
+func createFixtureReturnType(mockName *mockNameDecl) *gen.ReturnTypeDecl {
+	if len(mockName.interfaceName) != 0 {
+		return gen.ReturnType(mockName.interfaceName)
+	} else {
+		return gen.ReturnType(mockName.typeName).Pointer()
+	}
 }
 
 func LowerFirst(s string) string {
