@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/types"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -18,8 +19,13 @@ func main() {
 }
 
 type mockDecl struct {
-	name   string
+	*mockNameDecl
 	fields []*fieldDecl
+}
+
+type mockNameDecl struct {
+	typeName      string
+	interfaceName string
 }
 
 type fieldDecl struct {
@@ -39,10 +45,12 @@ func execute(wd string, mocks []string, offset int) error {
 		mockDecls := make([]*mockDecl, len(mocks)-offset)
 
 		for i := offset; i < len(mocks); i++ {
-			if typeObj := scope.Lookup(mocks[i]); typeObj == nil {
-				return fmt.Errorf("type %s is not found in %s", mocks[i], wd)
+			mockName := getMockName(mocks[i])
+
+			if typeObj := scope.Lookup(mockName.typeName); typeObj == nil {
+				return fmt.Errorf("type %s is not found in %s", mockName.typeName, wd)
 			} else if structType, ok := typeObj.Type().Underlying().(*types.Struct); !ok {
-				return fmt.Errorf("type %s is not a struct", mocks[i])
+				return fmt.Errorf("type %s is not a struct", mockName.typeName)
 			} else {
 				fields := make([]*fieldDecl, structType.NumFields())
 
@@ -56,14 +64,18 @@ func execute(wd string, mocks []string, offset int) error {
 				}
 
 				mockDecls[i-offset] = &mockDecl{
-					name:   mocks[i],
-					fields: fields,
+					mockNameDecl: mockName,
+					fields:       fields,
 				}
 			}
 		}
 
-		fmt.Println(mockDecls)
-		return nil
+		if file, err := generateMocks(mockDecls); err != nil {
+			return err
+		} else {
+			path := filepath.Join(wd, "mock_gen.go")
+			return file.Save(path)
+		}
 	}
 }
 
@@ -79,6 +91,21 @@ func loadPackageScope(wd string) (*types.Scope, error) {
 		return nil, fmt.Errorf("cannot identify a unique package in %s", wd)
 	} else {
 		return packages[0].Types.Scope(), nil
+	}
+}
+
+func getMockName(mock string) *mockNameDecl {
+	separatorIndex := strings.IndexByte(mock, ':')
+
+	if separatorIndex == -1 {
+		return &mockNameDecl{
+			typeName: mock,
+		}
+	} else {
+		return &mockNameDecl{
+			typeName:      mock[:separatorIndex],
+			interfaceName: mock[separatorIndex+1:],
+		}
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 func TestExecute(t *testing.T) {
 	const wd = ``
 	mocks := []string{
-		"impl1",
+		"impl1:Impl1Service",
 	}
 
 	execute(wd, mocks, 0)

@@ -1,4 +1,4 @@
-//go:generate mockgen impl1 impl2
+//go:generate mockgen impl1:Impl1Service impl2:Impl2Service
 package examples
 
 import (
