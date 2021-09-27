@@ -118,11 +118,18 @@ func getMockName(mock string) *mockNameDecl {
 }
 
 func getTypeDeclaration(typeName types.Type) *typeDecl {
-	strVal := typeName.String()
-	typeSeparator := strings.LastIndexByte(strVal, '.')
+	return getTypeDeclarationFromString(typeName.String())
+}
 
-	return &typeDecl{
-		pkgImport: strVal[:typeSeparator],
-		typeName:  strVal[typeSeparator+1:],
+func getTypeDeclarationFromString(strVal string) *typeDecl {
+	if typeSeparator := strings.LastIndexByte(strVal, '.'); typeSeparator == -1 {
+		return &typeDecl{
+			typeName: strVal,
+		}
+	} else {
+		return &typeDecl{
+			pkgImport: strVal[:typeSeparator],
+			typeName:  strVal[typeSeparator+1:],
+		}
 	}
 }
