@@ -9,6 +9,7 @@ import (
 
 const (
 	assertExpectationsName = "AssertExpectations"
+	fixture                = "fixture"
 )
 
 // generateMocks generates the complete code for all mocks
@@ -43,7 +44,8 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 			createFixtureReturnType(mock.mockNameDecl),
 			gen.ReturnType(fixtureName).Pointer(),
 		)
-		/*initFixtureStmt :=*/ gen.InitStruct(mock.typeName).Address()
+		initFixture := gen.InitStruct(mock.typeName).Address()
+		initStmt := gen.Declare(fixture).Values(initFixture)
 
 		for _, field := range mock.fields {
 			if methods, ok := declProvider.TryGetMock(wd, field.typeDecl); !ok {
@@ -67,8 +69,7 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 			}
 		}
 
-		// TODO:
-		// createFixtureFunc.AddStatement(initFixtureStmt)
+		createFixtureFunc.AddStatement(initStmt)
 	}
 
 	return file, nil
