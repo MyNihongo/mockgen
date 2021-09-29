@@ -51,21 +51,20 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 			if methods, ok := declProvider.TryGetMock(wd, field.typeDecl); !ok {
 				continue
 			} else {
-				fieldName, mockName := field.name, fmt.Sprintf("Mock%s", field.typeName)
-				generateMock(file, field, mockName, methods)
+				fieldName, mockTypeName := field.name, fmt.Sprintf("Mock%s", field.typeName)
+				generateMock(file, field, mockTypeName, methods)
 
-				fixtureStruct.AddProp(
-					gen.Property(fieldName, mockName).Pointer(),
-				)
+				fixtureStruct.AddProp(fieldName, mockTypeName).Pointer()
 
 				assertExpectationsFunc.AddStatement(
 					gen.Identifier("f").Field(fieldName).Call(assertExpectationsName).Args(gen.Identifier("t")),
 				)
 
 				createFixtureFunc.AddStatement(
-					// TODO: use the syntax
-					gen.Declare(fieldName).Values(gen.Identifier(fmt.Sprintf("new(%s)", mockName))),
+					gen.Declare(fieldName).Values(gen.New(mockTypeName)),
 				)
+
+				initFixture.AddPropValue(fieldName, gen.Identifier(fieldName))
 			}
 		}
 
