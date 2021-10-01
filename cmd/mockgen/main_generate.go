@@ -10,6 +10,7 @@ import (
 const (
 	assertExpectationsName = "AssertExpectations"
 	fixture                = "fixture"
+	ret                    = "ret"
 )
 
 // generateMocks generates the complete code for all mocks
@@ -85,9 +86,37 @@ func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*
 		gen.QualEmbeddedProperty("mock", "Mock"),
 	)
 
-	// for _, v := range v {
+	for _, method := range methods {
+		argsVal := gen.Identifier("m").Call("Called")
+		returnValues := make([]gen.Value, len(method.returns))
 
-	// }
+		params := make([]*gen.ParamDecl, len(method.params))
+		returns := make([]*gen.ReturnTypeDecl, len(method.returns))
+
+		// Params
+
+		// Returns
+		for i, returnType := range method.returns {
+			var alias string
+			if len(returnType.pkgImport) != 0 {
+				file.AddImport(returnType.pkgImport)
+				alias = getImportAlias(returnType.pkgImport)
+			}
+
+			returns[i] = gen.QualReturnType(
+				alias,
+				returnType.typeName,
+			)
+		}
+
+		file.Method(
+			gen.This(mockName),
+			method.name,
+		).Params(params...).ReturnTypes(returns...).Block(
+			gen.Declare(ret).Values(argsVal),
+			gen.Return(returnValues...),
+		)
+	}
 }
 
 func createFixtureTypeName(mockName *mockNameDecl) string {
@@ -106,5 +135,13 @@ func createFixtureReturnType(mockName *mockNameDecl) *gen.ReturnTypeDecl {
 		return gen.ReturnType(mockName.interfaceName)
 	} else {
 		return gen.ReturnType(mockName.typeName).Pointer()
+	}
+}
+
+func getImportAlias(pkgImport string) string {
+	if index := strings.LastIndexByte(pkgImport, '/'); index == -1 {
+		return pkgImport
+	} else {
+		return pkgImport[index+1:]
 	}
 }

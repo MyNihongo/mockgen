@@ -25,6 +25,20 @@ func getWd() string {
 	return filepath.Join(wd[:index], "examples")
 }
 
+func TestGetImportAlias(t *testing.T) {
+	const want = `mock`
+	got := getImportAlias("github.com/stretchr/testify/mock")
+
+	assert.Equal(t, want, got)
+}
+
+func TestGetImportNoAlias(t *testing.T) {
+	const want = `context`
+	got := getImportAlias("context")
+
+	assert.Equal(t, want, got)
+}
+
 func TestGenerateOneService(t *testing.T) {
 	const want = ``
 	fixture := []*mockDecl{

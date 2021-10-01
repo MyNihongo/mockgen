@@ -11,6 +11,7 @@ type paramDecl struct {
 }
 
 type methodDecl struct {
+	name    string
 	params  []*paramDecl
 	returns []*typeDecl
 }
@@ -47,6 +48,7 @@ func (d *declProvider) TryGetMock(wd string, typeDecl *typeDecl) ([]*methodDecl,
 				return nil, false
 			} else {
 				funcs[i] = &methodDecl{
+					name:    interfaceTypeObj.Method(i).Name(),
 					params:  getParams(signature),
 					returns: getReturns(signature),
 				}
