@@ -45,7 +45,9 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 			gen.ReturnType(fixtureName).Pointer(),
 		)
 		initFixture := gen.InitStruct(mock.typeName).Address()
-		initStmt := gen.Declare(fixture).Values(initFixture)
+		initFixtureStmt := gen.Declare(fixture).Values(initFixture)
+
+		initMocks := gen.InitStruct(fixtureName).Address()
 
 		for _, field := range mock.fields {
 			if methods, ok := declProvider.TryGetMock(wd, field.typeDecl); !ok {
@@ -65,10 +67,14 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 				)
 
 				initFixture.AddPropValue(fieldName, gen.Identifier(fieldName))
+				initMocks.AddPropValue(fieldName, gen.Identifier(fieldName))
 			}
 		}
 
-		createFixtureFunc.AddStatement(initStmt)
+		createFixtureFunc.AddStatement(initFixtureStmt)
+		createFixtureFunc.AddStatement(
+			gen.Return(gen.Identifier(fixture), initMocks),
+		)
 	}
 
 	return file, nil
