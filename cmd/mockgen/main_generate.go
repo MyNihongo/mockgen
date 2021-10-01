@@ -87,33 +87,40 @@ func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*
 	)
 
 	for _, method := range methods {
-		argsVal := gen.Identifier("m").Call("Called")
+		args := make([]gen.Value, len(method.params))
 		returnValues := make([]gen.Value, len(method.returns))
 
 		params := make([]*gen.ParamDecl, len(method.params))
 		returns := make([]*gen.ReturnTypeDecl, len(method.returns))
 
 		// Params
+		for i, param := range method.params {
+			params[i] = gen.QualParam(
+				param.name,
+				addImportAlias(file, param.pkgImport),
+				param.typeName,
+			)
+
+			args[i] = gen.Identifier(param.name)
+		}
 
 		// Returns
 		for i, returnType := range method.returns {
-			var alias string
-			if len(returnType.pkgImport) != 0 {
-				file.AddImport(returnType.pkgImport)
-				alias = getImportAlias(returnType.pkgImport)
-			}
+			alias := addImportAlias(file, returnType.pkgImport)
 
 			returns[i] = gen.QualReturnType(
 				alias,
 				returnType.typeName,
 			)
+
+			// returnValues[i] =
 		}
 
 		file.Method(
 			gen.This(mockName),
 			method.name,
 		).Params(params...).ReturnTypes(returns...).Block(
-			gen.Declare(ret).Values(argsVal),
+			gen.Declare(ret).Values(gen.Identifier("m").Call("Called").Args(args...)),
 			gen.Return(returnValues...),
 		)
 	}
@@ -138,10 +145,16 @@ func createFixtureReturnType(mockName *mockNameDecl) *gen.ReturnTypeDecl {
 	}
 }
 
-func getImportAlias(pkgImport string) string {
-	if index := strings.LastIndexByte(pkgImport, '/'); index == -1 {
-		return pkgImport
+func addImportAlias(file *gen.File, pkgImport string) string {
+	if len(pkgImport) == 0 {
+		return ""
 	} else {
-		return pkgImport[index+1:]
+		file.AddImport(pkgImport)
+
+		if index := strings.LastIndexByte(pkgImport, '/'); index == -1 {
+			return pkgImport
+		} else {
+			return pkgImport[index+1:]
+		}
 	}
 }
