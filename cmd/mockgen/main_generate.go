@@ -116,11 +116,20 @@ func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*
 			returnValues[i] = createReturnValue(returnType, alias, i)
 		}
 
+		// Compilation error - unused var if no return types
+		var callArgsStmt gen.Stmt
+		callArgsValue := gen.Identifier("m").Call("Called").Args(args...)
+		if len(method.returns) == 0 {
+			callArgsStmt = callArgsValue
+		} else {
+			callArgsStmt = gen.Declare(ret).Values(callArgsValue)
+		}
+
 		file.Method(
 			gen.This(mockName),
 			method.name,
 		).Params(params...).ReturnTypes(returns...).Block(
-			gen.Declare(ret).Values(gen.Identifier("m").Call("Called").Args(args...)),
+			callArgsStmt,
 			gen.Return(returnValues...),
 		)
 	}
