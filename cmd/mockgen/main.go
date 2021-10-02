@@ -82,7 +82,7 @@ func execute(wd string, mocks []string, offset int) error {
 func loadPackage(wd string, patterns ...string) (*packages.Package, error) {
 	cfg := &packages.Config{
 		Dir:  wd,
-		Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedDeps,
+		Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedDeps | packages.NeedName,
 	}
 
 	if packages, err := packages.Load(cfg, patterns...); err != nil {
