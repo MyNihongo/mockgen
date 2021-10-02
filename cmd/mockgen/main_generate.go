@@ -36,7 +36,7 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 			gen.This(fixtureName).Pointer(),
 			assertExpectationsName,
 		).Params(
-			gen.QualParam("t", "testing", "T"),
+			gen.QualParam("t", "testing", "T").Pointer(),
 		)
 
 		// createFixture
@@ -126,7 +126,7 @@ func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*
 		}
 
 		file.Method(
-			gen.This(mockName),
+			gen.This(mockName).Pointer(),
 			method.name,
 		).Params(params...).ReturnTypes(returns...).Block(
 			callArgsStmt,
