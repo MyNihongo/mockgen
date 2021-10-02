@@ -113,7 +113,7 @@ func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*
 				returnType.typeName,
 			)
 
-			// returnValues[i] =
+			returnValues[i] = createReturnValue(returnType, alias, i)
 		}
 
 		file.Method(
@@ -156,5 +156,28 @@ func addImportAlias(file *gen.File, pkgImport string) string {
 		} else {
 			return pkgImport[index+1:]
 		}
+	}
+}
+
+func createReturnValue(returnType *typeDecl, alias string, index int) gen.Value {
+	variable, arg := gen.Identifier(ret), gen.Int(index)
+
+	var funcName string
+	switch returnType.typeName {
+	case "error":
+		funcName = "Error"
+	case "bool":
+		funcName = "Bool"
+	case "int":
+		funcName = "Int"
+	case "string":
+		funcName = "String"
+	}
+
+	if len(funcName) != 0 {
+		return variable.Call(funcName).Args(arg)
+	} else {
+		return variable.Call("Get").Args(arg).
+			CastQual(alias, returnType.typeName)
 	}
 }
