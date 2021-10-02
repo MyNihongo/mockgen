@@ -55,20 +55,24 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 				continue
 			} else {
 				fieldName, mockTypeName := field.name, fmt.Sprintf("Mock%s", field.typeName)
-				generateMock(file, field, mockTypeName, methods)
 
+				// struct declaration
 				fixtureStruct.AddProp(fieldName, mockTypeName).Pointer()
 
-				assertExpectationsFunc.AddStatement(
-					gen.Identifier("f").Field(fieldName).Call(assertExpectationsName).Args(gen.Identifier("t")),
-				)
-
+				// init a fixture
 				createFixtureFunc.AddStatement(
 					gen.Declare(fieldName).Values(gen.New(mockTypeName)),
 				)
 
 				initFixture.AddPropValue(fieldName, gen.Identifier(fieldName))
 				initMocks.AddPropValue(fieldName, gen.Identifier(fieldName))
+
+				// assert expectations
+				assertExpectationsFunc.AddStatement(
+					gen.Identifier("f").Field(fieldName).Call(assertExpectationsName).Args(gen.Identifier("t")),
+				)
+
+				generateMock(file, field, mockTypeName, methods)
 			}
 		}
 
