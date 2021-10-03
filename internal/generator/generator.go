@@ -12,6 +12,7 @@ const (
 	assertExpectationsName = "AssertExpectations"
 	fixture                = "fixture"
 	ret                    = "ret"
+	mockThis               = "m"
 )
 
 // GenerateMocks generates the complete code for all mocks
@@ -46,9 +47,9 @@ func GenerateMocks(wd, pkgName string, mocks []*MockDecl) (*gen.File, error) {
 			createFixtureReturnType(mock.mockNameDecl),
 			gen.ReturnType(fixtureName).Pointer(),
 		)
+
 		initFixture := gen.InitStruct(mock.typeName).Address()
 		initFixtureStmt := gen.Declare(fixture).Values(initFixture)
-
 		initMocks := gen.InitStruct(fixtureName).Address()
 
 		for _, field := range mock.fields {
@@ -92,11 +93,11 @@ func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*
 	)
 
 	for _, method := range methods {
-		args := make([]gen.Value, method.LenParams())
-		returnValues := make([]gen.Value, method.LenReturns())
-
 		params := make([]*gen.ParamDecl, method.LenParams())
 		returns := make([]*gen.ReturnTypeDecl, method.LenReturns())
+
+		args := make([]gen.Value, method.LenParams())
+		returnValues := make([]gen.Value, method.LenReturns())
 
 		// Params
 		for i, param := range method.Params() {
@@ -121,77 +122,42 @@ func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*
 			returnValues[i] = createReturnValue(returnType, alias, i)
 		}
 
-		// Compilation error - unused var if no return types
-		var callArgsStmt gen.Stmt
-		callArgsValue := gen.Identifier("m").Call("Called").Args(args...)
-		if method.LenReturns() == 0 {
-			callArgsStmt = callArgsValue
-		} else {
-			callArgsStmt = gen.Declare(ret).Values(callArgsValue)
-		}
-
-		file.Method(
-			gen.This(mockName).Pointer(),
-			method.Name(),
-		).Params(params...).ReturnTypes(returns...).Block(
-			callArgsStmt,
-			gen.Return(returnValues...),
-		)
+		generateMethodImpl(file, method, mockName, params, args, returns, returnValues)
+		generateMethodSetup(file, method, mockName, params, args)
 	}
 }
 
-func createFixtureTypeName(mockName *mockNameDecl) string {
-	var name string
-	if len(mockName.interfaceName) != 0 {
-		name = mockName.interfaceName
+func generateMethodImpl(file *gen.File, method *loader.MethodDecl, mockName string, params []*gen.ParamDecl, args []gen.Value, returns []*gen.ReturnTypeDecl, returnValues []gen.Value) {
+	var callArgsStmt gen.Stmt
+	if callArgsValue := gen.Identifier(mockThis).Call("Called").Args(args...); method.LenReturns() == 0 {
+		callArgsStmt = callArgsValue
 	} else {
-		name = mockName.typeName
+		callArgsStmt = gen.Declare(ret).Values(callArgsValue)
 	}
 
-	return fmt.Sprintf("fixture%s", strings.Title(name))
+	file.Method(
+		gen.This(mockName).Pointer(),
+		method.Name(),
+	).Params(params...).ReturnTypes(returns...).Block(
+		callArgsStmt,
+		gen.Return(returnValues...),
+	)
 }
 
-func createFixtureReturnType(mockName *mockNameDecl) *gen.ReturnTypeDecl {
-	if len(mockName.interfaceName) != 0 {
-		return gen.ReturnType(mockName.interfaceName)
-	} else {
-		return gen.ReturnType(mockName.typeName).Pointer()
-	}
-}
+func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName string, params []*gen.ParamDecl, args []gen.Value) {
+	setupArgs := make([]gen.Value, len(args)+1)
+	setupArgs[0] = gen.String(method.Name())
 
-func addImportAlias(file *gen.File, pkgImport string) string {
-	if len(pkgImport) == 0 {
-		return ""
-	} else {
-		file.AddImport(pkgImport)
-
-		if index := strings.LastIndexByte(pkgImport, '/'); index == -1 {
-			return pkgImport
-		} else {
-			return pkgImport[index+1:]
-		}
-	}
-}
-
-func createReturnValue(returnType *loader.TypeDecl, alias string, index int) gen.Value {
-	variable, arg := gen.Identifier(ret), gen.Int(index)
-
-	var funcName string
-	switch returnType.TypeName() {
-	case "error":
-		funcName = "Error"
-	case "bool":
-		funcName = "Bool"
-	case "int":
-		funcName = "Int"
-	case "string":
-		funcName = "String"
+	for i, arg := range args {
+		setupArgs[i+1] = arg
 	}
 
-	if len(funcName) != 0 {
-		return variable.Call(funcName).Args(arg)
-	} else {
-		return variable.Call("Get").Args(arg).
-			CastQual(alias, returnType.TypeName())
-	}
+	methodSetup := file.Method(
+		gen.This(mockName).Pointer(),
+		fmt.Sprintf("On%s", method.Name()),
+	).Params(params...)
+
+	methodSetup.Block(
+		gen.Identifier(mockThis).Call("On").Args(setupArgs...),
+	)
 }
