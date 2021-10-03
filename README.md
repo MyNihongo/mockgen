@@ -34,6 +34,7 @@ func (i *impl1) Foo() {
 	i.ser2.Foo("string1", "string2")
 }
 ```
+This will generate quite a lot of code, so please go to [mock_gen_test.go](examples/mock_gen_test.go) to see what is actually generated.
 
 #### Command samples
 Unlimited number of services can be passed for generation.  
