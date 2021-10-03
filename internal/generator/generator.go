@@ -13,6 +13,7 @@ const (
 	fixture                = "fixture"
 	ret                    = "ret"
 	mockThis               = "m"
+	call                   = "call"
 )
 
 // GenerateMocks generates the complete code for all mocks
@@ -157,7 +158,32 @@ func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName str
 		fmt.Sprintf("On%s", method.Name()),
 	).Params(params...)
 
+	var callSetupStmt gen.Stmt
+	var returnValues []gen.Value
+
+	if callSetupValue := gen.Identifier(mockThis).Call("On").Args(setupArgs...); len(method.Returns()) != 0 {
+		setupReturnsName := fmt.Sprintf("setup_%s_%s", mockName, method.Name())
+		file.Struct(setupReturnsName).Props(
+			gen.QualProperty(call, "mock", "Call").Pointer(),
+		)
+
+		methodSetup.ReturnTypes(
+			gen.ReturnType(setupReturnsName).Pointer(),
+		)
+
+		callSetupStmt = gen.Declare(call).Values(callSetupValue)
+		returnValues = []gen.Value{
+			gen.InitStruct(setupReturnsName).Props(
+				gen.PropValue(call, gen.Identifier(call)),
+			).Address(),
+		}
+	} else {
+		callSetupStmt = callSetupValue
+		returnValues = make([]gen.Value, 0)
+	}
+
 	methodSetup.Block(
-		gen.Identifier(mockThis).Call("On").Args(setupArgs...),
+		callSetupStmt,
+		gen.Return(returnValues...),
 	)
 }

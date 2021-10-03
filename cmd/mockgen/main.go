@@ -13,8 +13,10 @@ import (
 func main() {
 	if wd, err := os.Getwd(); err != nil {
 		fmt.Println(err)
+	} else if err = execute(wd, os.Args, 1); err != nil {
+		fmt.Println(err)
 	} else {
-		execute(wd, os.Args, 1)
+		fmt.Println("mock generated")
 	}
 }
 
