@@ -43,7 +43,7 @@ func GenerateMocks(wd, pkgName string, mocks []*MockDecl) (*gen.File, error) {
 		)
 
 		// createFixture
-		file.CommentF("%s creates a new fixture will all mocks", createFixtureName)
+		file.CommentF("%s creates a new fixture with all mocks", createFixtureName)
 		createFixtureFunc := file.Func(createFixtureName).ReturnTypes(
 			createFixtureReturnType(mock.mockNameDecl),
 			gen.ReturnType(fixtureName).Pointer(),
@@ -54,27 +54,25 @@ func GenerateMocks(wd, pkgName string, mocks []*MockDecl) (*gen.File, error) {
 		initMocks := gen.InitStruct(fixtureName).Address()
 
 		for _, field := range mock.fields {
-			if methods, ok := declProvider.TryGetMock(wd, field.TypeDecl); !ok {
-				continue
-			} else {
-				fieldName, mockTypeName := field.name, fmt.Sprintf("Mock%s", field.TypeName())
+			fieldName, mockTypeName := field.name, fmt.Sprintf("Mock%s", field.TypeName())
 
-				// struct declaration
-				fixtureStruct.AddProp(fieldName, mockTypeName).Pointer()
+			// struct declaration
+			fixtureStruct.AddProp(fieldName, mockTypeName).Pointer()
 
-				// init a fixture
-				createFixtureFunc.AddStatement(
-					gen.Declare(fieldName).Values(gen.New(mockTypeName)),
-				)
+			// init a fixture
+			createFixtureFunc.AddStatement(
+				gen.Declare(fieldName).Values(gen.New(mockTypeName)),
+			)
 
-				initFixture.AddPropValue(fieldName, gen.Identifier(fieldName))
-				initMocks.AddPropValue(fieldName, gen.Identifier(fieldName))
+			initFixture.AddPropValue(fieldName, gen.Identifier(fieldName))
+			initMocks.AddPropValue(fieldName, gen.Identifier(fieldName))
 
-				// assert expectations
-				assertExpectationsFunc.AddStatement(
-					gen.Identifier("f").Field(fieldName).Call(assertExpectationsName).Args(gen.Identifier("t")),
-				)
+			// assert expectations
+			assertExpectationsFunc.AddStatement(
+				gen.Identifier("f").Field(fieldName).Call(assertExpectationsName).Args(gen.Identifier("t")),
+			)
 
+			if methods, ok := declProvider.TryGetMock(wd, field.TypeDecl); ok {
 				generateMock(file, field, mockTypeName, methods)
 			}
 		}
