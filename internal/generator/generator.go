@@ -127,7 +127,7 @@ func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*
 		}
 
 		generateMethodImpl(file, method, mockName, params, args, returns, returnValues)
-		generateMethodSetup(file, method, mockName, params, args)
+		generateMethodSetup(file, method, mockName, params, args, returns)
 	}
 }
 
@@ -148,7 +148,7 @@ func generateMethodImpl(file *gen.File, method *loader.MethodDecl, mockName stri
 	)
 }
 
-func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName string, params []*gen.ParamDecl, args []gen.Value) {
+func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName string, params []*gen.ParamDecl, args []gen.Value, returns []*gen.ReturnTypeDecl) {
 	setupArgs := make([]gen.Value, len(args)+1)
 	setupArgs[0] = gen.String(method.Name())
 
@@ -164,7 +164,7 @@ func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName str
 	var callSetupStmt gen.Stmt
 	var returnValues []gen.Value
 
-	if callSetupValue := gen.Identifier(mockThis).Call("On").Args(setupArgs...); method.LenReturns() != 0 {
+	if callSetupValue := gen.Identifier(mockThis).Call("On").Args(setupArgs...); len(returns) != 0 {
 		setupReturnsName := fmt.Sprintf("setup_%s_%s", mockName, method.Name())
 
 		methodSetup.ReturnTypes(
@@ -178,7 +178,7 @@ func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName str
 			).Address(),
 		}
 
-		generateMethodReturnSetup(file, setupReturnsName, method.Returns())
+		generateMethodReturnSetup(file, setupReturnsName, returns)
 	} else {
 		callSetupStmt = callSetupValue
 		returnValues = make([]gen.Value, 0)
@@ -190,7 +190,7 @@ func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName str
 	)
 }
 
-func generateMethodReturnSetup(file *gen.File, setupReturnsName string, returns []*loader.TypeDecl) {
+func generateMethodReturnSetup(file *gen.File, setupReturnsName string, returns []*gen.ReturnTypeDecl) {
 	params := make([]*gen.ParamDecl, len(returns))
 	args := make([]gen.Value, len(returns))
 
@@ -198,7 +198,7 @@ func generateMethodReturnSetup(file *gen.File, setupReturnsName string, returns 
 		argName := fmt.Sprintf("param%d", i+1)
 
 		args[i] = gen.Identifier(argName)
-		params[i] = gen.Param(argName, ret.TypeName())
+		params[i] = gen.QualParam(argName, ret.GetTypeAlias(), ret.GetTypeName())
 	}
 
 	file.Struct(setupReturnsName).Props(
