@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -18,6 +19,10 @@ const (
 
 // GenerateMocks generates the complete code for all mocks
 func GenerateMocks(wd, pkgName string, mocks []*MockDecl) (*gen.File, error) {
+	if len(mocks) == 0 {
+		return nil, errors.New("no mocks found")
+	}
+
 	file := gen.NewFile(pkgName, "my-nihongo-mockgen")
 	file.Imports(
 		gen.Import("testing"),
