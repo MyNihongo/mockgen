@@ -1,4 +1,4 @@
-package main
+package generator
 
 import (
 	"go/format"
@@ -21,20 +21,20 @@ func formatFile(file *gen.File) string {
 
 func getWd() string {
 	wd, _ := os.Getwd()
-	index := strings.LastIndex(wd, "cmd")
+	index := strings.LastIndex(wd, "internal")
 
 	return filepath.Join(wd[:index], "examples")
 }
 
 func TestGenerateOneService(t *testing.T) {
 	const want = ``
-	fixture := []*mockDecl{
+	fixture := []*MockDecl{
 		{
 			mockNameDecl: &mockNameDecl{
 				typeName:      "impl1",
 				interfaceName: "Impl1Service",
 			},
-			fields: []*fieldDecl{
+			fields: []*FieldDecl{
 				{
 					name: "ser1",
 					TypeDecl: loader.NewTypeDecl(
@@ -47,7 +47,7 @@ func TestGenerateOneService(t *testing.T) {
 	}
 
 	wd := getWd()
-	file, err := generateMocks(wd, pkgName, fixture)
+	file, err := GenerateMocks(wd, pkgName, fixture)
 	got := formatFile(file)
 
 	assert.NotNil(t, err)

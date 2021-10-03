@@ -1,4 +1,4 @@
-package main
+package generator
 
 import (
 	"fmt"
@@ -14,8 +14,8 @@ const (
 	ret                    = "ret"
 )
 
-// generateMocks generates the complete code for all mocks
-func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
+// GenerateMocks generates the complete code for all mocks
+func GenerateMocks(wd, pkgName string, mocks []*MockDecl) (*gen.File, error) {
 	file := gen.NewFile(pkgName, "my-nihongo-mockgen")
 	file.Imports(
 		gen.Import("testing"),
@@ -86,7 +86,7 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 	return file, nil
 }
 
-func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*loader.MethodDecl) {
+func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*loader.MethodDecl) {
 	file.Struct(mockName).Props(
 		gen.QualEmbeddedProperty("mock", "Mock"),
 	)
