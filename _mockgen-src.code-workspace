@@ -10,7 +10,8 @@
 			"Mockgen",
 			"Nihongo",
 			"stretchr",
-			"struct"
+			"struct",
+			"vals"
 		],
 		"files.exclude": {
 			"examples/**": true

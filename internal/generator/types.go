@@ -1,6 +1,7 @@
 package generator
 
 import (
+	gen "github.com/MyNihongo/codegen"
 	"github.com/MyNihongo/mockgen/internal/loader"
 )
 
@@ -17,6 +18,15 @@ type mockNameDecl struct {
 type FieldDecl struct {
 	name string
 	*loader.TypeDecl
+}
+
+type methodValues struct {
+	method       *loader.MethodDecl
+	mockName     string
+	params       []*gen.ParamDecl
+	args         []gen.Value
+	returns      []*gen.ReturnTypeDecl
+	returnValues []gen.Value
 }
 
 func NewMockDecl(name *mockNameDecl, field []*FieldDecl) *MockDecl {
