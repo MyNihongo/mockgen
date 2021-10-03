@@ -6,8 +6,11 @@
 	],
 	"settings": {
 		"cSpell.words": [
+			"initialisation",
+			"Mockgen",
 			"Nihongo",
-			"stretchr"
+			"stretchr",
+			"struct"
 		],
 		"files.exclude": {
 			"examples/**": true
