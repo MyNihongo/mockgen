@@ -161,11 +161,8 @@ func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName str
 	var callSetupStmt gen.Stmt
 	var returnValues []gen.Value
 
-	if callSetupValue := gen.Identifier(mockThis).Call("On").Args(setupArgs...); len(method.Returns()) != 0 {
+	if callSetupValue := gen.Identifier(mockThis).Call("On").Args(setupArgs...); method.LenReturns() != 0 {
 		setupReturnsName := fmt.Sprintf("setup_%s_%s", mockName, method.Name())
-		file.Struct(setupReturnsName).Props(
-			gen.QualProperty(call, "mock", "Call").Pointer(),
-		)
 
 		methodSetup.ReturnTypes(
 			gen.ReturnType(setupReturnsName).Pointer(),
@@ -177,6 +174,8 @@ func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName str
 				gen.PropValue(call, gen.Identifier(call)),
 			).Address(),
 		}
+
+		generateMethodReturnSetup(file, setupReturnsName, method.Returns())
 	} else {
 		callSetupStmt = callSetupValue
 		returnValues = make([]gen.Value, 0)
@@ -185,5 +184,28 @@ func generateMethodSetup(file *gen.File, method *loader.MethodDecl, mockName str
 	methodSetup.Block(
 		callSetupStmt,
 		gen.Return(returnValues...),
+	)
+}
+
+func generateMethodReturnSetup(file *gen.File, setupReturnsName string, returns []*loader.TypeDecl) {
+	params := make([]*gen.ParamDecl, len(returns))
+	args := make([]gen.Value, len(returns))
+
+	for i, ret := range returns {
+		argName := fmt.Sprintf("param%d", i+1)
+
+		args[i] = gen.Identifier(argName)
+		params[i] = gen.Param(argName, ret.TypeName())
+	}
+
+	file.Struct(setupReturnsName).Props(
+		gen.QualProperty(call, "mock", "Call").Pointer(),
+	)
+
+	file.Method(
+		gen.This(setupReturnsName).Pointer(),
+		"Return",
+	).Params(params...).Block(
+		gen.Identifier("s").Field(call).Call("Return").Args(args...),
 	)
 }
