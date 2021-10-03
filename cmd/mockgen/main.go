@@ -13,16 +13,16 @@ import (
 func main() {
 	if wd, err := os.Getwd(); err != nil {
 		fmt.Println(err)
-	} else if err = execute(wd, os.Args, 1); err != nil {
+	} else if pkgName, err := execute(wd, os.Args, 1); err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println("mock generated")
+		fmt.Printf("mock generated: %s\n", pkgName)
 	}
 }
 
-func execute(wd string, mocks []string, offset int) error {
+func execute(wd string, mocks []string, offset int) (string, error) {
 	if pkg, err := loader.LoadPackage(wd); err != nil {
-		return err
+		return "", err
 	} else {
 		mockDecls := make([]*gen.MockDecl, len(mocks)-offset)
 
@@ -30,9 +30,9 @@ func execute(wd string, mocks []string, offset int) error {
 			mockName := gen.GetMockName(mocks[i])
 
 			if typeObj := pkg.Types.Scope().Lookup(mockName.TypeName()); typeObj == nil {
-				return fmt.Errorf("type %s is not found in %s", mockName.TypeName(), wd)
+				return "", fmt.Errorf("type %s is not found in %s", mockName.TypeName(), wd)
 			} else if structType, ok := typeObj.Type().Underlying().(*types.Struct); !ok {
-				return fmt.Errorf("type %s is not a struct", mockName.TypeName())
+				return "", fmt.Errorf("type %s is not a struct", mockName.TypeName())
 			} else {
 				fields := make([]*gen.FieldDecl, structType.NumFields())
 
@@ -53,10 +53,10 @@ func execute(wd string, mocks []string, offset int) error {
 		}
 
 		if file, err := gen.GenerateMocks(wd, pkg.Name, mockDecls); err != nil {
-			return err
+			return "", err
 		} else {
 			path := filepath.Join(wd, "mock_gen_test.go")
-			return file.Save(path)
+			return pkg.Name, file.Save(path)
 		}
 	}
 }
