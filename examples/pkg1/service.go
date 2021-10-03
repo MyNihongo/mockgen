@@ -6,6 +6,6 @@ type Service1_1 interface {
 }
 
 type Service1_2 interface {
-	Foo(param1 string, param2 int16)
+	Foo(param1 string, param2 int16) (int, bool)
 	Boo(param string)
 }
