@@ -9,7 +9,7 @@ import (
 	gen "github.com/MyNihongo/codegen"
 )
 
-const PkgName = `examples`
+const PkgName = `mocking`
 
 func FormatFile(file *gen.File) string {
 	res, _ := format.Source([]byte(file.GoString()))
@@ -20,5 +20,5 @@ func GetWd(rootDir string) string {
 	wd, _ := os.Getwd()
 	index := strings.LastIndex(wd, rootDir)
 
-	return filepath.Join(wd[:index], PkgName)
+	return filepath.Join(wd[:index], "examples")
 }

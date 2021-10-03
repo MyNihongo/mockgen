@@ -8,6 +8,9 @@
 		"cSpell.words": [
 			"Nihongo",
 			"stretchr"
-		]
+		],
+		"files.exclude": {
+			"examples/**": true
+		}
 	}
 }
