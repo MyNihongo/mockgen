@@ -1,4 +1,4 @@
-//go:generate mockgen impl1:Impl1Service impl2:Impl2Service
+//go:generate mockgen impl1:Impl1Service impl2:Impl2Service impl3
 package mocking
 
 import (
@@ -16,18 +16,6 @@ type impl2 struct {
 	ser3  pkg2.Service2_1
 }
 
-type Impl1Service interface {
-	Foo()
-}
-
-type Impl2Service interface {
-	Boo()
-}
-
-func (i *impl1) Foo() {
-
-}
-
-func (i *impl2) Boo() {
-
+type impl3 struct {
+	ser1 pkg2.Service2_2
 }
