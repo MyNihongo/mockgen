@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	gen "github.com/MyNihongo/codegen"
+	"github.com/MyNihongo/mockgen/internal/loader"
 )
 
 const (
@@ -21,7 +22,7 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 		gen.Import("github.com/stretchr/testify/mock"),
 	)
 
-	declProvider := NewDeclProvider()
+	declProvider := loader.NewDeclProvider()
 
 	for _, mock := range mocks {
 		fixtureName := createFixtureTypeName(mock.mockNameDecl)
@@ -51,10 +52,10 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 		initMocks := gen.InitStruct(fixtureName).Address()
 
 		for _, field := range mock.fields {
-			if methods, ok := declProvider.TryGetMock(wd, field.typeDecl); !ok {
+			if methods, ok := declProvider.TryGetMock(wd, field.TypeDecl); !ok {
 				continue
 			} else {
-				fieldName, mockTypeName := field.name, fmt.Sprintf("Mock%s", field.typeName)
+				fieldName, mockTypeName := field.name, fmt.Sprintf("Mock%s", field.TypeName())
 
 				// struct declaration
 				fixtureStruct.AddProp(fieldName, mockTypeName).Pointer()
@@ -85,36 +86,36 @@ func generateMocks(wd, pkgName string, mocks []*mockDecl) (*gen.File, error) {
 	return file, nil
 }
 
-func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*methodDecl) {
+func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*loader.MethodDecl) {
 	file.Struct(mockName).Props(
 		gen.QualEmbeddedProperty("mock", "Mock"),
 	)
 
 	for _, method := range methods {
-		args := make([]gen.Value, len(method.params))
-		returnValues := make([]gen.Value, len(method.returns))
+		args := make([]gen.Value, method.LenParams())
+		returnValues := make([]gen.Value, method.LenReturns())
 
-		params := make([]*gen.ParamDecl, len(method.params))
-		returns := make([]*gen.ReturnTypeDecl, len(method.returns))
+		params := make([]*gen.ParamDecl, method.LenParams())
+		returns := make([]*gen.ReturnTypeDecl, method.LenReturns())
 
 		// Params
-		for i, param := range method.params {
+		for i, param := range method.Params() {
 			params[i] = gen.QualParam(
-				param.name,
-				addImportAlias(file, param.pkgImport),
-				param.typeName,
+				param.Name(),
+				addImportAlias(file, param.PkgImport()),
+				param.TypeName(),
 			)
 
-			args[i] = gen.Identifier(param.name)
+			args[i] = gen.Identifier(param.Name())
 		}
 
 		// Returns
-		for i, returnType := range method.returns {
-			alias := addImportAlias(file, returnType.pkgImport)
+		for i, returnType := range method.Returns() {
+			alias := addImportAlias(file, returnType.PkgImport())
 
 			returns[i] = gen.QualReturnType(
 				alias,
-				returnType.typeName,
+				returnType.TypeName(),
 			)
 
 			returnValues[i] = createReturnValue(returnType, alias, i)
@@ -123,7 +124,7 @@ func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*
 		// Compilation error - unused var if no return types
 		var callArgsStmt gen.Stmt
 		callArgsValue := gen.Identifier("m").Call("Called").Args(args...)
-		if len(method.returns) == 0 {
+		if method.LenReturns() == 0 {
 			callArgsStmt = callArgsValue
 		} else {
 			callArgsStmt = gen.Declare(ret).Values(callArgsValue)
@@ -131,7 +132,7 @@ func generateMock(file *gen.File, field *fieldDecl, mockName string, methods []*
 
 		file.Method(
 			gen.This(mockName).Pointer(),
-			method.name,
+			method.Name(),
 		).Params(params...).ReturnTypes(returns...).Block(
 			callArgsStmt,
 			gen.Return(returnValues...),
@@ -172,11 +173,11 @@ func addImportAlias(file *gen.File, pkgImport string) string {
 	}
 }
 
-func createReturnValue(returnType *typeDecl, alias string, index int) gen.Value {
+func createReturnValue(returnType *loader.TypeDecl, alias string, index int) gen.Value {
 	variable, arg := gen.Identifier(ret), gen.Int(index)
 
 	var funcName string
-	switch returnType.typeName {
+	switch returnType.TypeName() {
 	case "error":
 		funcName = "Error"
 	case "bool":
@@ -191,6 +192,6 @@ func createReturnValue(returnType *typeDecl, alias string, index int) gen.Value 
 		return variable.Call(funcName).Args(arg)
 	} else {
 		return variable.Call("Get").Args(arg).
-			CastQual(alias, returnType.typeName)
+			CastQual(alias, returnType.TypeName())
 	}
 }

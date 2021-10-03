@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	gen "github.com/MyNihongo/codegen"
+	"github.com/MyNihongo/mockgen/internal/loader"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,10 +37,10 @@ func TestGenerateOneService(t *testing.T) {
 			fields: []*fieldDecl{
 				{
 					name: "ser1",
-					typeDecl: &typeDecl{
-						pkgImport: "github.com/MyNihongo/mockgen/examples/pkg1",
-						typeName:  "Service1",
-					},
+					TypeDecl: loader.NewTypeDecl(
+						"github.com/MyNihongo/mockgen/examples/pkg1",
+						"Service1",
+					),
 				},
 			},
 		},

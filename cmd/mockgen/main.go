@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/go/packages"
+	"github.com/MyNihongo/mockgen/internal/loader"
 )
 
 func main() {
@@ -30,16 +30,11 @@ type mockNameDecl struct {
 
 type fieldDecl struct {
 	name string
-	*typeDecl
-}
-
-type typeDecl struct {
-	pkgImport string
-	typeName  string
+	*loader.TypeDecl
 }
 
 func execute(wd string, mocks []string, offset int) error {
-	if pkg, err := loadPackage(wd); err != nil {
+	if pkg, err := loader.LoadPackage(wd); err != nil {
 		return err
 	} else {
 		mockDecls := make([]*mockDecl, len(mocks)-offset)
@@ -59,7 +54,7 @@ func execute(wd string, mocks []string, offset int) error {
 
 					fields[j] = &fieldDecl{
 						name:     field.Name(),
-						typeDecl: getTypeDeclaration(field.Type()),
+						TypeDecl: loader.GetTypeDeclaration(field.Type()),
 					}
 				}
 
@@ -73,32 +68,9 @@ func execute(wd string, mocks []string, offset int) error {
 		if file, err := generateMocks(wd, pkg.Name, mockDecls); err != nil {
 			return err
 		} else {
-			path := filepath.Join(wd, "mock_gen.go")
+			path := filepath.Join(wd, "mock_gen_test.go")
 			return file.Save(path)
 		}
-	}
-}
-
-func loadPackage(wd string, patterns ...string) (*packages.Package, error) {
-	cfg := &packages.Config{
-		Dir:  wd,
-		Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedDeps | packages.NeedName,
-	}
-
-	if packages, err := packages.Load(cfg, patterns...); err != nil {
-		return nil, err
-	} else if len(packages) != 1 {
-		return nil, fmt.Errorf("cannot identify a unique package in %s", wd)
-	} else {
-		return packages[0], nil
-	}
-}
-
-func loadPackageScope(wd string, patterns ...string) (*types.Scope, error) {
-	if pkg, err := loadPackage(wd, patterns...); err != nil {
-		return nil, err
-	} else {
-		return pkg.Types.Scope(), nil
 	}
 }
 
@@ -113,23 +85,6 @@ func getMockName(mock string) *mockNameDecl {
 		return &mockNameDecl{
 			typeName:      mock[:separatorIndex],
 			interfaceName: mock[separatorIndex+1:],
-		}
-	}
-}
-
-func getTypeDeclaration(typeName types.Type) *typeDecl {
-	return getTypeDeclarationFromString(typeName.String())
-}
-
-func getTypeDeclarationFromString(strVal string) *typeDecl {
-	if typeSeparator := strings.LastIndexByte(strVal, '.'); typeSeparator == -1 {
-		return &typeDecl{
-			typeName: strVal,
-		}
-	} else {
-		return &typeDecl{
-			pkgImport: strVal[:typeSeparator],
-			typeName:  strVal[typeSeparator+1:],
 		}
 	}
 }
