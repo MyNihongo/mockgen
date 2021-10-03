@@ -1,9 +1,9 @@
 //go:generate mockgen impl1:Impl1Service impl2:Impl2Service
-package examples
+package mocking
 
 import (
-	"github.com/MyNihongo/mockgen/examples/pkg1"
-	"github.com/MyNihongo/mockgen/examples/pkg2"
+	"github.com/MyNihongo/mockgen/mocking/pkg1"
+	"github.com/MyNihongo/mockgen/mocking/pkg2"
 )
 
 type impl1 struct {
