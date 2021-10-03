@@ -7,12 +7,13 @@ import (
 )
 
 type impl1 struct {
-	ser1 pkg1.Service1
-	ser2 pkg2.Service2
+	ser1 pkg1.Service1_1
+	ser2 pkg2.Service2_1
 }
 
 type impl2 struct {
-	ser11 pkg1.Service11
+	ser11 pkg1.Service1_2
+	ser3  pkg2.Service2_1
 }
 
 type Impl1Service interface {
