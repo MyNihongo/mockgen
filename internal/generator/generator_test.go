@@ -96,6 +96,7 @@ func (s *setup_MockService1_1_Foo) Return(param1 string) {
 					TypeDecl: loader.NewTypeDecl(
 						"github.com/MyNihongo/mockgen/mocking/pkg1",
 						"Service1_1",
+						false,
 					),
 				},
 			},
@@ -183,6 +184,7 @@ func createFixtureImpl2Service() (Impl2Service, *fixtureImpl2Service) {
 					TypeDecl: loader.NewTypeDecl(
 						"github.com/MyNihongo/mockgen/mocking/pkg2",
 						"Service2_1",
+						false,
 					),
 				},
 			},
@@ -198,6 +200,7 @@ func createFixtureImpl2Service() (Impl2Service, *fixtureImpl2Service) {
 					TypeDecl: loader.NewTypeDecl(
 						"github.com/MyNihongo/mockgen/mocking/pkg2",
 						"Service2_1",
+						false,
 					),
 				},
 			},

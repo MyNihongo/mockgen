@@ -21,12 +21,14 @@ type declProvider struct {
 type TypeDecl struct {
 	pkgImport string
 	typeName  string
+	isPointer bool
 }
 
-func NewTypeDecl(pkgImport, typeName string) *TypeDecl {
+func NewTypeDecl(pkgImport, typeName string, isPointer bool) *TypeDecl {
 	return &TypeDecl{
 		pkgImport: pkgImport,
 		typeName:  typeName,
+		isPointer: isPointer,
 	}
 }
 

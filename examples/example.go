@@ -19,3 +19,7 @@ type impl2 struct {
 type impl3 struct {
 	ser1 pkg2.Service2_2
 }
+
+type impl4 struct {
+	ser1 pkg2.Service2_3
+}

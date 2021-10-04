@@ -273,9 +273,18 @@ func (s *setup_MockService2_2_Now) Return(param1 time.Time) {
 	s.call.Return(param1)
 }
 `
-
 	mocks := []string{
 		"impl3",
+	}
+
+	got := generateMocks(t, mocks)
+	assert.Equal(t, want, got)
+}
+
+func TestImpl4(t *testing.T) {
+	const want = `not true`
+	mocks := []string{
+		"impl4",
 	}
 
 	got := generateMocks(t, mocks)
