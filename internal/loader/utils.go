@@ -36,14 +36,22 @@ func GetTypeDeclaration(typeName types.Type) *TypeDecl {
 }
 
 func getTypeDeclarationFromString(strVal string) *TypeDecl {
+	var isPointer bool
+	if strings.HasPrefix(strVal, "*") {
+		isPointer = true
+		strVal = strVal[1:]
+	}
+
 	if typeSeparator := strings.LastIndexByte(strVal, '.'); typeSeparator == -1 {
 		return &TypeDecl{
-			typeName: strVal,
+			typeName:  strVal,
+			isPointer: isPointer,
 		}
 	} else {
 		return &TypeDecl{
 			pkgImport: strVal[:typeSeparator],
 			typeName:  strVal[typeSeparator+1:],
+			isPointer: isPointer,
 		}
 	}
 }
