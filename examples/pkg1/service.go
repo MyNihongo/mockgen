@@ -1,7 +1,5 @@
 package pkg1
 
-import "github.com/MyNihongo/mockgen/mocking/pkg2"
-
 type Service1_1 interface {
 	Foo(param1 string, param2 int16) string
 	Boo(param string) (uint64, error)
@@ -13,5 +11,5 @@ type Service1_2 interface {
 }
 
 type Struct1_1 struct {
-	service pkg2.Service2_2
+	service Service1_1
 }

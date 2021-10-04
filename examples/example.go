@@ -26,4 +26,5 @@ type impl4 struct {
 
 type impl5 struct {
 	pkg1.Struct1_1
+	ser1 pkg2.Service2_1
 }
