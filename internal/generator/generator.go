@@ -109,7 +109,7 @@ func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*
 				param.Name(),
 				addImportAlias(file, param.PkgImport()),
 				param.TypeName(),
-			)
+			).SetIsPointer(param.IsPointer())
 
 			args[i] = gen.Identifier(param.Name())
 		}
@@ -121,7 +121,7 @@ func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*
 			returns[i] = gen.QualReturnType(
 				alias,
 				returnType.TypeName(),
-			)
+			).SetIsPointer(returnType.IsPointer())
 
 			returnValues[i] = createReturnValue(returnType, alias, i)
 		}

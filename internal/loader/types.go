@@ -63,3 +63,7 @@ func (t *TypeDecl) PkgImport() string {
 func (t *TypeDecl) TypeName() string {
 	return t.typeName
 }
+
+func (t *TypeDecl) IsPointer() bool {
+	return t.isPointer
+}
