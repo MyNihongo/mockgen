@@ -45,6 +45,9 @@ type MockService1_1 struct {
 	mock.Mock
 }
 
+func (m *MockService1_1) AssertBooNotCalled(t *testing.T, param string) {
+	m.AssertNotCalled(t, "Boo", param)
+}
 func (m *MockService1_1) Boo(param string) (uint64, error) {
 	ret := m.Called(param)
 	return ret.Get(0).(uint64), ret.Error(1)
@@ -60,6 +63,9 @@ type setup_MockService1_1_Boo struct {
 
 func (s *setup_MockService1_1_Boo) Return(param1 uint64, param2 error) {
 	s.call.Return(param1, param2)
+}
+func (m *MockService1_1) AssertFooNotCalled(t *testing.T, param1 string, param2 int16) {
+	m.AssertNotCalled(t, "Foo", param1, param2)
 }
 func (m *MockService1_1) Foo(param1 string, param2 int16) string {
 	ret := m.Called(param1, param2)
