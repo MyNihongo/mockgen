@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/MyNihongo/mockgen/internal/test"
@@ -21,6 +22,9 @@ func TestExecute(t *testing.T) {
 
 	if res, err := execute(wd, mocks, 0); err == nil {
 		save(res.file, wd)
+	} else {
+		fmt.Println(err)
+		t.Fail()
 	}
 }
 
