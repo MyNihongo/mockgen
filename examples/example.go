@@ -23,3 +23,7 @@ type impl3 struct {
 type impl4 struct {
 	ser1 pkg2.Service2_3
 }
+
+type impl5 struct {
+	pkg1.Struct1_1
+}
