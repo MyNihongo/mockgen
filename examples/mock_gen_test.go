@@ -2,8 +2,10 @@
 package mocking
 
 import (
+	"context"
 	"github.com/stretchr/testify/mock"
 	"testing"
+	"time"
 )
 
 type fixtureImpl1Service struct {
@@ -29,6 +31,9 @@ type MockService1_1 struct {
 	mock.Mock
 }
 
+func (m *MockService1_1) AssertBooNotCalled(t *testing.T, param string) {
+	m.AssertNotCalled(t, "Boo", param)
+}
 func (m *MockService1_1) Boo(param string) (uint64, error) {
 	ret := m.Called(param)
 	return ret.Get(0).(uint64), ret.Error(1)
@@ -44,6 +49,9 @@ type setup_MockService1_1_Boo struct {
 
 func (s *setup_MockService1_1_Boo) Return(param1 uint64, param2 error) {
 	s.call.Return(param1, param2)
+}
+func (m *MockService1_1) AssertFooNotCalled(t *testing.T, param1 string, param2 int16) {
+	m.AssertNotCalled(t, "Foo", param1, param2)
 }
 func (m *MockService1_1) Foo(param1 string, param2 int16) string {
 	ret := m.Called(param1, param2)
@@ -66,6 +74,9 @@ type MockService2_1 struct {
 	mock.Mock
 }
 
+func (m *MockService2_1) AssertFooNotCalled(t *testing.T, arg1 string, arg2 string) {
+	m.AssertNotCalled(t, "Foo", arg1, arg2)
+}
 func (m *MockService2_1) Foo(arg1 string, arg2 string) (string, int, error) {
 	ret := m.Called(arg1, arg2)
 	return ret.String(0), ret.Int(1), ret.Error(2)
@@ -106,6 +117,9 @@ type MockService1_2 struct {
 	mock.Mock
 }
 
+func (m *MockService1_2) AssertBooNotCalled(t *testing.T, param string) {
+	m.AssertNotCalled(t, "Boo", param)
+}
 func (m *MockService1_2) Boo(param string) {
 	m.Called(param)
 	return
@@ -113,6 +127,9 @@ func (m *MockService1_2) Boo(param string) {
 func (m *MockService1_2) OnBoo(param string) {
 	m.On("Boo", param)
 	return
+}
+func (m *MockService1_2) AssertFooNotCalled(t *testing.T, param1 string, param2 int16) {
+	m.AssertNotCalled(t, "Foo", param1, param2)
 }
 func (m *MockService1_2) Foo(param1 string, param2 int16) (int, bool) {
 	ret := m.Called(param1, param2)
@@ -129,4 +146,44 @@ type setup_MockService1_2_Foo struct {
 
 func (s *setup_MockService1_2_Foo) Return(param1 int, param2 bool) {
 	s.call.Return(param1, param2)
+}
+
+type fixtureImpl3 struct {
+	ser1 *MockService2_2
+}
+
+// AssertExpectations asserts that everything specified with On and Return was in fact called as expected. Calls may have occurred in any order.
+func (f *fixtureImpl3) AssertExpectations(t *testing.T) {
+	f.ser1.AssertExpectations(t)
+}
+
+// createFixtureImpl3 creates a new fixture with all mocks
+func createFixtureImpl3() (*impl3, *fixtureImpl3) {
+	ser1 := new(MockService2_2)
+	fixture := &impl3{ser1: ser1}
+	return fixture, &fixtureImpl3{ser1: ser1}
+}
+
+type MockService2_2 struct {
+	mock.Mock
+}
+
+func (m *MockService2_2) AssertNowNotCalled(t *testing.T, ctx context.Context) {
+	m.AssertNotCalled(t, "Now", ctx)
+}
+func (m *MockService2_2) Now(ctx context.Context) time.Time {
+	ret := m.Called(ctx)
+	return ret.Get(0).(time.Time)
+}
+func (m *MockService2_2) OnNow(ctx context.Context) *setup_MockService2_2_Now {
+	call := m.On("Now", ctx)
+	return &setup_MockService2_2_Now{call: call}
+}
+
+type setup_MockService2_2_Now struct {
+	call *mock.Call
+}
+
+func (s *setup_MockService2_2_Now) Return(param1 time.Time) {
+	s.call.Return(param1)
 }
