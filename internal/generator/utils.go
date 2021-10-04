@@ -75,6 +75,7 @@ func createReturnValue(returnType *loader.TypeDecl, alias string, index int) gen
 		return variable.Call(funcName).Args(arg)
 	} else {
 		return variable.Call("Get").Args(arg).
-			CastQual(alias, returnType.TypeName())
+			CastQual(alias, returnType.TypeName()).
+			SetIsPointer(returnType.IsPointer())
 	}
 }

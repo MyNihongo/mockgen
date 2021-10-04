@@ -235,7 +235,7 @@ func generateMethodReturnSetup(file *gen.File, setupReturnsName string, returns 
 		argName := fmt.Sprintf("param%d", i+1)
 
 		args[i] = gen.Identifier(argName)
-		params[i] = gen.QualParam(argName, ret.GetTypeAlias(), ret.GetTypeName())
+		params[i] = gen.QualParam(argName, ret.GetTypeAlias(), ret.GetTypeName()).SetIsPointer(ret.GetIsPointer())
 	}
 
 	file.Struct(setupReturnsName).Props(
