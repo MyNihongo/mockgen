@@ -159,16 +159,22 @@ func generateMethodImpl(file *gen.File, vals *methodValues) {
 }
 
 func generateAssertNotCalled(file *gen.File, vals *methodValues) {
-	params := make([]*gen.ParamDecl, len(vals.params)+1)
-	args := make([]gen.Value, len(vals.args)+2)
+	const (
+		t            = "t"
+		paramsOffset = 1
+		argsOffset   = 2
+	)
 
-	params[0] = gen.QualParam("t", "testing", "T").Pointer()
-	args[0] = gen.Identifier("t")
+	params := make([]*gen.ParamDecl, len(vals.params)+paramsOffset)
+	args := make([]gen.Value, len(vals.args)+argsOffset)
+
+	params[0] = gen.QualParam(t, "testing", "T").Pointer()
+	args[0] = gen.Identifier(t)
 	args[1] = gen.String(vals.method.Name())
 
 	for i := 0; i < len(vals.params); i++ {
-		params[i+1] = vals.params[i]
-		args[i+2] = vals.args[i]
+		params[i+paramsOffset] = vals.params[i]
+		args[i+argsOffset] = vals.args[i]
 	}
 
 	file.Method(
