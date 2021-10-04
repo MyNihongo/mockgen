@@ -135,6 +135,9 @@ type MockService2_1 struct {
 	mock.Mock
 }
 
+func (m *MockService2_1) AssertFooNotCalled(t *testing.T, arg1 string, arg2 string) {
+	m.AssertNotCalled(t, "Foo", arg1, arg2)
+}
 func (m *MockService2_1) Foo(arg1 string, arg2 string) (string, int, error) {
 	ret := m.Called(arg1, arg2)
 	return ret.String(0), ret.Int(1), ret.Error(2)
