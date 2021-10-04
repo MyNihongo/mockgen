@@ -135,6 +135,7 @@ func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*
 			returnValues: returnValues,
 		}
 
+		generateAssertNotCalled(file, vals)
 		generateMethodImpl(file, vals)
 		generateMethodSetup(file, vals)
 	}
@@ -157,12 +158,39 @@ func generateMethodImpl(file *gen.File, vals *methodValues) {
 	)
 }
 
+func generateAssertNotCalled(file *gen.File, vals *methodValues) {
+	const (
+		t            = "t"
+		paramsOffset = 1
+		argsOffset   = 2
+	)
+
+	params := make([]*gen.ParamDecl, len(vals.params)+paramsOffset)
+	args := make([]gen.Value, len(vals.args)+argsOffset)
+
+	params[0] = gen.QualParam(t, "testing", "T").Pointer()
+	args[0] = gen.Identifier(t)
+	args[1] = gen.String(vals.method.Name())
+
+	for i := 0; i < len(vals.params); i++ {
+		params[i+paramsOffset] = vals.params[i]
+		args[i+argsOffset] = vals.args[i]
+	}
+
+	file.Method(
+		gen.This(vals.mockName).Pointer(),
+		fmt.Sprintf("Assert%sNotCalled", vals.method.Name()),
+	).Params(params...).Block(
+		gen.Identifier("m").Call("AssertNotCalled").Args(args...),
+	)
+}
+
 func generateMethodSetup(file *gen.File, vals *methodValues) {
-	setupArgs := make([]gen.Value, len(vals.args)+1)
-	setupArgs[0] = gen.String(vals.method.Name())
+	args := make([]gen.Value, len(vals.args)+1)
+	args[0] = gen.String(vals.method.Name())
 
 	for i, arg := range vals.args {
-		setupArgs[i+1] = arg
+		args[i+1] = arg
 	}
 
 	methodSetup := file.Method(
@@ -173,7 +201,7 @@ func generateMethodSetup(file *gen.File, vals *methodValues) {
 	var callSetupStmt gen.Stmt
 	var returnValues []gen.Value
 
-	if callSetupValue := gen.Identifier(mockThis).Call("On").Args(setupArgs...); len(vals.returns) != 0 {
+	if callSetupValue := gen.Identifier(mockThis).Call("On").Args(args...); len(vals.returns) != 0 {
 		setupReturnsName := fmt.Sprintf("setup_%s_%s", vals.mockName, vals.method.Name())
 
 		methodSetup.ReturnTypes(
