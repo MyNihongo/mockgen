@@ -11,6 +11,7 @@
 			"Nihongo",
 			"stretchr",
 			"struct",
+			"structs",
 			"vals"
 		],
 		"files.exclude": {
