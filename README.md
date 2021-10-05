@@ -47,3 +47,13 @@ Generate mocks for *service1*, *service2* and *service3* with interfaces.
 mockgen service1:Service1 service2
 ```
 Generate a mock for *service1* with its interface; Generate a mock for *service2* without an interface.
+
+## Keep the package reference
+Command `go mod tidy` will remove the reference of Mockgen by default. In order to keep the reference create a dummy file somewhere and import a dummy type.
+```go
+package pkg
+
+import "github.com/MyNihongo/mockgen"
+
+var _ mockgen.Reference
+```
