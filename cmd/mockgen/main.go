@@ -42,15 +42,20 @@ func execute(wd string, mocks []string, offset int) (*execResult, error) {
 			} else if structType, ok := typeObj.Type().Underlying().(*types.Struct); !ok {
 				return nil, fmt.Errorf("type %s is not a struct", mockName.TypeName())
 			} else {
-				fields := make([]*gen.FieldDecl, structType.NumFields())
+				fields := make([]*gen.FieldDecl, 0)
 
 				for j := 0; j < structType.NumFields(); j++ {
 					field := structType.Field(j)
 
-					fields[j] = gen.NewFieldDecl(
+					// TODO: maybe in the future process recursively
+					if field.Embedded() {
+						continue
+					}
+
+					fields = append(fields, gen.NewFieldDecl(
 						field.Name(),
 						loader.GetTypeDeclaration(field.Type()),
-					)
+					))
 				}
 
 				mockDecls[i-offset] = gen.NewMockDecl(

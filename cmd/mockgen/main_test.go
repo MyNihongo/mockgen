@@ -347,5 +347,12 @@ func (s *setup_MockService2_3_Foo) Return(param1 *pkg2.MyOutput) {
 
 // TestImpl5 tests embedded structs
 func TestImpl5(t *testing.T) {
+	const want = ``
+	mocks := []string{
+		"impl5",
+	}
+
+	got := generateMocks(t, mocks)
+	assert.Equal(t, want, got)
 	t.Fail()
 }
