@@ -3,9 +3,9 @@ module github.com/MyNihongo/mockgen
 go 1.17
 
 require (
-	github.com/MyNihongo/codegen v0.0.17
+	github.com/MyNihongo/codegen v0.0.19
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/tools v0.1.6
+	golang.org/x/tools v0.1.7
 )
 
 require (

@@ -51,7 +51,7 @@ func GenerateMocks(wd, pkgName string, mocks []*MockDecl) (*gen.File, error) {
 		file.CommentF("%s creates a new fixture with all mocks", createFixtureName)
 		createFixtureFunc := file.Func(createFixtureName).ReturnTypes(
 			createFixtureReturnType(mock.mockNameDecl),
-			gen.ReturnType(fixtureName).Pointer(),
+			gen.Type(fixtureName).Pointer(),
 		)
 
 		initFixture := gen.InitStruct(mock.typeName).Address()
@@ -98,7 +98,7 @@ func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*
 
 	for _, method := range methods {
 		params := make([]*gen.ParamDecl, method.LenParams())
-		returns := make([]*gen.ReturnTypeDecl, method.LenReturns())
+		returns := make([]*gen.TypeDecl, method.LenReturns())
 
 		args := make([]gen.Value, method.LenParams())
 		returnValues := make([]gen.Value, method.LenReturns())
@@ -118,7 +118,7 @@ func generateMock(file *gen.File, field *FieldDecl, mockName string, methods []*
 		for i, returnType := range method.Returns() {
 			alias := addImportAlias(file, returnType.PkgImport())
 
-			returns[i] = gen.QualReturnType(
+			returns[i] = gen.QualType(
 				alias,
 				returnType.TypeName(),
 			).SetIsPointer(returnType.IsPointer())
@@ -205,7 +205,7 @@ func generateMethodSetup(file *gen.File, vals *methodValues) {
 		setupReturnsName := fmt.Sprintf("setup_%s_%s", vals.mockName, vals.method.Name())
 
 		methodSetup.ReturnTypes(
-			gen.ReturnType(setupReturnsName).Pointer(),
+			gen.Type(setupReturnsName).Pointer(),
 		)
 
 		callSetupStmt = gen.Declare(call).Values(callSetupValue)
@@ -227,7 +227,7 @@ func generateMethodSetup(file *gen.File, vals *methodValues) {
 	)
 }
 
-func generateMethodReturnSetup(file *gen.File, setupReturnsName string, returns []*gen.ReturnTypeDecl) {
+func generateMethodReturnSetup(file *gen.File, setupReturnsName string, returns []*gen.TypeDecl) {
 	params := make([]*gen.ParamDecl, len(returns))
 	args := make([]gen.Value, len(returns))
 
