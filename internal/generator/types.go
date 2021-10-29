@@ -25,7 +25,7 @@ type methodValues struct {
 	mockName     string
 	params       []*gen.ParamDecl
 	args         []gen.Value
-	returns      []*gen.ReturnTypeDecl
+	returns      []*gen.TypeDecl
 	returnValues []gen.Value
 }
 

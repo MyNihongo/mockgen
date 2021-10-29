@@ -34,11 +34,11 @@ func createFixtureTypeName(mockName *mockNameDecl) string {
 	return fmt.Sprintf("fixture%s", strings.Title(name))
 }
 
-func createFixtureReturnType(mockName *mockNameDecl) *gen.ReturnTypeDecl {
+func createFixtureReturnType(mockName *mockNameDecl) *gen.TypeDecl {
 	if len(mockName.interfaceName) != 0 {
-		return gen.ReturnType(mockName.interfaceName)
+		return gen.Type(mockName.interfaceName)
 	} else {
-		return gen.ReturnType(mockName.typeName).Pointer()
+		return gen.Type(mockName.typeName).Pointer()
 	}
 }
 
